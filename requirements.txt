@@ -2,3 +2,4 @@ selenium
 pandas
 openpyxl
 webdriver-manager
+undetected-chromedriver
