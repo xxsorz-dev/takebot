@@ -1,15 +1,12 @@
 import time
 import datetime
 import pandas as pd
-from selenium import webdriver
+import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
-from webdriver_manager.chrome import ChromeDriverManager
-import os
 
 # ====================== 配置 ======================
 SELLER_EMAIL = "xrkdzsw@163.com"
@@ -17,8 +14,6 @@ SELLER_PWD = "Aa040406@"
 MY_STORE_NAME = "High-quality good things"
 START_HOUR = 10
 STOP_HOUR = 9
-
-# 云端路径
 EXCEL_PATH = "products.xlsx"
 
 # ====================== 读取商品 ======================
@@ -51,9 +46,7 @@ def is_running_time():
 def clean_price(price_text):
     return float(price_text.replace("R", "").replace(" ", "").replace(",", ""))
 
-import undetected_chromedriver as uc
-
-# 抓取 无头 云端专用
+# ====================== 抓取用：无头浏览器 适配Render ======================
 def get_headless_driver():
     options = uc.ChromeOptions()
     options.add_argument("--headless=new")
@@ -61,19 +54,17 @@ def get_headless_driver():
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
     options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0 Safari/537.36")
-
     driver = uc.Chrome(options=options)
     driver.set_page_load_timeout(20)
     return driver
 
-# 改价 有头 云端专用
+# ====================== 改价用：有头浏览器 适配Render ======================
 def get_normal_driver():
     options = uc.ChromeOptions()
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
     options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0 Safari/537.36")
-
     driver = uc.Chrome(options=options)
     driver.set_page_load_timeout(20)
     return driver
@@ -169,7 +160,7 @@ def batch_update_prices(products):
     driver = get_normal_driver()
     try:
         driver.get("https://sellers.takealot.com/login")
-        WebDriverWait(driver, 8).until(EC.presence_of_element_located((By.ID, "email")))
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "email")))
         driver.find_element(By.ID, "email").send_keys(SELLER_EMAIL)
         driver.find_element(By.ID, "password").send_keys(SELLER_PWD)
         driver.find_element(By.XPATH, '//button[@type="submit"]').click()
@@ -181,7 +172,7 @@ def batch_update_prices(products):
                 continue
             try:
                 print(f"\n🔄 改价：{p['title']}")
-                search_box = WebDriverWait(driver, 8).until(
+                search_box = WebDriverWait(driver, 10).until(
                     EC.presence_of_element_located((
                         By.XPATH,
                         "//input[@placeholder='Search...' and contains(@class,'chakra-input')]"
@@ -190,7 +181,7 @@ def batch_update_prices(products):
                 search_box.clear()
                 search_box.send_keys(p["title"])
                 time.sleep(2)
-                price_input = WebDriverWait(driver, 6).until(
+                price_input = WebDriverWait(driver, 8).until(
                     EC.element_to_be_clickable((
                         By.CSS_SELECTOR,
                         "input[name='Selling Price'].chakra-numberinput__field"
@@ -215,7 +206,7 @@ def batch_update_prices(products):
         print("\n✅ 批量改价完成！")
 
 # ====================== 主程序 ======================
-print("=== 云端24小时跟价机器人 ===")
+print("=== Render 云端专属版 24小时跟价 ===")
 print(f"⏰ 运行时间：{START_HOUR}:00 - 次日{STOP_HOUR}:00")
 while True:
     now = datetime.datetime.now()
